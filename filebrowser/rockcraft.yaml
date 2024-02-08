@@ -1,0 +1,158 @@
+# Developer note: See README.md for instructions on how to maintain this image and 
+# how builds theirs
+name: filebrowser
+base: ubuntu@22.04
+# using vX.Y.Z not X.Y.Z because upstream's convention includes the prefix "v"
+version: v2.27.0
+summary: An image for the filebrowser tool
+description: |
+  filebrowser is an interface for managing files, usable in a container
+  or as a standalone app.  See https://github.com/filebrowser/filebrowser
+  for more information.
+license: Apache-2.0
+run-user: _daemon_  # UID/GID 584792
+
+platforms:
+    amd64:
+
+services:
+  filebrowser:
+    override: merge
+    command: "/filebrowser [ ]"
+    working-dir: "/"
+    startup: enabled
+    on-check-failure:
+      alive: restart
+entrypoint-service: filebrowser
+
+checks:
+  alive:
+    override: replace
+    level: alive
+    period: 5s
+    exec:
+      command: /healthcheck.sh
+      working-dir: /
+      user: _daemon_
+      group: _daemon_
+
+parts:
+  security-team-requirement:
+    plugin: nil
+    override-build: |
+      mkdir -p ${CRAFT_PART_INSTALL}/usr/share/rocks
+      (echo "# os-release" && cat /etc/os-release && echo "# dpkg-query" && dpkg-query -f '${db:Status-Abbrev},${binary:Package},${Version},${source:Package},${Source:Version}\n' -W) > ${CRAFT_PART_INSTALL}/usr/share/rocks/dpkg.query
+
+  healthcheck:
+    plugin: nil
+    source: https://github.com/filebrowser/filebrowser.git
+    source-tag: v2.27.0
+    override-build: |
+      cp healthcheck.sh $CRAFT_PART_INSTALL/healthcheck.sh
+    stage-packages:
+      - curl
+      - jq
+    permissions:
+      - path: healthcheck.sh
+        # 584792 is the _daemon_ user
+        owner: 584792
+        group: 584792
+        mode: "755"
+
+  add-config:
+    plugin: nil
+    source: https://github.com/filebrowser/filebrowser.git
+    source-tag: v2.27.0
+    build-packages:
+      - jq
+    override-build: |
+      jq '.database = "/tmp/database.db"' docker_config.json > $CRAFT_PART_INSTALL/.filebrowser.json
+    # TODO: Omitting stage here means .filebrowser.json does not get copied automatically.  Not sure why
+    #       Asked here: https://matrix.to/#/!NPPCseDHKRvSBMUEXN:ubuntu.com/$3pkoT_gtSQlIa_J2lv6iy3P0JdzMQ5Cbt38guXG9Sg4?via=ubuntu.com&via=matrix.org
+    stage:
+      - ".filebrowser.json"
+
+  frontend:
+    # Tried to use `plugin: npm` but it does:
+    #  * downloads node
+    #  * `npm pack`
+    # `npm pack` only tars the dist, it does not actually build anything.  We
+    # need to run `npm run build`.  Instead, we use `plugin: nil` and download
+    # node manually.
+    # plugin: npm
+    # npm-include-node: true
+    # npm-node-version: "18.19.0"
+    plugin: nil
+    source: https://github.com/filebrowser/filebrowser.git
+    source-tag: v2.27.0
+    # tried to use source-subdir, but override-build ignores it.  Maybe source-subdir is
+    # implemented as part of the default build step?
+    # source-subdir: frontend
+    build-environment:
+      # Set the node version for build-override here.
+      - NODE_VERSION: '18.18.2'
+    override-build: |
+      cd frontend
+
+      # Setup node/npm
+      node_uri="https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz"
+      echo fetching node for build: $node_uri
+      # Download and unpack right here
+      curl $node_uri | tar xzf - -C ./ --no-same-owner --strip-components=1
+      PATH=$(pwd)/bin:$PATH
+
+      # Build the frontend
+      npm ci
+      npm run build
+      # TODO: Is there a native way to do this?  Or do I lose this behaviour by 
+      # doing override-build?
+      mkdir -p $CRAFT_PART_INSTALL/frontend
+      cp -r $CRAFT_PART_BUILD/frontend/dist $CRAFT_PART_INSTALL/frontend
+    # We do not want anything from this part to get primed as it is only as a build artifact
+    # for the backend part.  By default, `prime` copies everything from stage to prime, so we
+    # override `prime` here to negative match all files and ensure it copies nothing.
+    prime:
+      - "-*"
+
+  backend:
+    plugin: go
+    # The go binary must be built after copying in the `frontend/dist` folder that
+    # is built by the `frontend` part.  The build of `backend` will "succeeed"
+    # without this folder, but if you run filebrowser and browse to its webserver
+    # you will see errors rather than a functioning webapp
+    after:
+      - frontend
+    build-snaps:
+      - go/1.20/stable
+    source: https://github.com/filebrowser/filebrowser.git
+    source-tag: v2.27.0
+    build-environment:
+      - CGO_ENABLED: 0
+      - GOOS: linux
+    override-build: |
+      # Copy the frontend/dist here before building normally.
+      # There is not a rockcraft-native way of doing this, see:
+      # https://matrix.to/#/!NPPCseDHKRvSBMUEXN:ubuntu.com/$NGm6PTH62PVOjt2GtAAxzaGr_3BGap1COXcZUwx1voI?via=ubuntu.com&via=matrix.org
+      mkdir -p frontend
+      cp -r $CRAFT_STAGE/frontend/dist ./frontend/
+      craftctl default 
+    organize:
+      # go plugin by default puts its binaries in bin
+      bin/filebrowser: "filebrowser"
+
+  create-src-dir:
+    # Create a directory that the user has write access to.  This is the default
+    # root location for the filebrowser
+    # Note: If we write files to this dir as part of the rock build, create-src-dir
+    #       must be executed run after any step that writes to /srv otherwise
+    #       otherwise those operations will clobber the permissions set here
+    after: [backend, healthcheck]
+    plugin: nil
+    override-build: |
+      mkdir -p $CRAFT_PART_INSTALL/srv
+    permissions:
+      - path: srv
+        # 584792 is the _daemon_ user
+        owner: 584792
+        group: 584792
+        mode: "755"
