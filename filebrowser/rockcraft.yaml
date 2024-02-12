@@ -80,26 +80,18 @@ parts:
     #  * downloads node
     #  * `npm pack`
     # `npm pack` only tars the dist, it does not actually build anything.  We
-    # need to run `npm run build`.  Instead, we use `plugin: nil` and download
-    # node manually.
+    # need to run `npm run build`.  Instead, we use `plugin: nil` and add node via
+    # build-snaps.
     plugin: nil
     source: https://github.com/filebrowser/filebrowser.git
     source-tag: v2.27.0
     # tried to use source-subdir, but override-build ignores it.  Maybe source-subdir is
     # implemented as part of the default build step?
     # source-subdir: frontend
-    build-environment:
-      # Set the node version for build-override here.
-      - NODE_VERSION: '18.18.2'
+    build-snaps:
+      - node/18/stable
     override-build: |
       cd frontend
-
-      # Setup node/npm
-      node_uri="https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz"
-      echo fetching node for build: $node_uri
-      # Download and unpack right here
-      curl $node_uri | tar xzf - -C ./ --no-same-owner --strip-components=1
-      PATH=$(pwd)/bin:$PATH
 
       # Build the frontend
       npm ci
