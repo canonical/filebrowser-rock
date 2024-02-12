@@ -1,5 +1,7 @@
 # Developer note: See CONTRIBUTING.md for instructions on how to maintain this image and 
 # how builds theirs
+# This rock reproduces the build defined upstream for:
+# https://github.com/filebrowser/filebrowser/tree/v2.27.0
 name: filebrowser
 base: ubuntu@22.04
 # using vX.Y.Z not X.Y.Z because upstream's convention includes the prefix "v"
