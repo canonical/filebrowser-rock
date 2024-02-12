@@ -82,9 +82,6 @@ parts:
     # `npm pack` only tars the dist, it does not actually build anything.  We
     # need to run `npm run build`.  Instead, we use `plugin: nil` and download
     # node manually.
-    # plugin: npm
-    # npm-include-node: true
-    # npm-node-version: "18.19.0"
     plugin: nil
     source: https://github.com/filebrowser/filebrowser.git
     source-tag: v2.27.0
