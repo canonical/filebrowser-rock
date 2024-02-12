@@ -32,6 +32,7 @@ checks:
     override: replace
     level: alive
     period: 5s
+    timeout: 3s
     exec:
       command: /healthcheck.sh
       working-dir: /
