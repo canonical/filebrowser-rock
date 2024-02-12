@@ -1,4 +1,4 @@
-# Developer note: See README.md for instructions on how to maintain this image and 
+# Developer note: See CONTRIBUTING.md for instructions on how to maintain this image and 
 # how builds theirs
 name: filebrowser
 base: ubuntu@22.04
