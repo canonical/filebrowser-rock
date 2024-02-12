@@ -19,7 +19,7 @@ platforms:
 
 services:
   filebrowser:
-    override: merge
+    override: replace
     command: "/filebrowser [ ]"
     working-dir: "/"
     startup: enabled
