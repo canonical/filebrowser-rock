@@ -135,10 +135,12 @@ parts:
   create-srv-dir:
     # Create a directory that the user has write access to.  This is the default
     # root location for the filebrowser
-    # Note: If we write files to this dir as part of the rock build, create-src-dir
+    # Note: If we write files to this dir as part of the rock build, create-srv-dir
     #       must be executed run after any step that writes to /srv otherwise
     #       otherwise those operations will clobber the permissions set here
-    after: [backend, healthcheck]
+    after:
+      - backend
+      - healthcheck
     plugin: nil
     override-build: |
       mkdir -p $CRAFT_PART_INSTALL/srv
