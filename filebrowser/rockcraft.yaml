@@ -143,7 +143,7 @@ parts:
       # go plugin by default puts its binaries in bin
       bin/filebrowser: "filebrowser"
 
-  create-src-dir:
+  create-srv-dir:
     # Create a directory that the user has write access to.  This is the default
     # root location for the filebrowser
     # Note: If we write files to this dir as part of the rock build, create-src-dir
