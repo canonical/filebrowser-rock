@@ -36,7 +36,7 @@ def test_rock(rock_test_env):
     check_rock = CheckRock("rockcraft.yaml")
     rock_image = check_rock.get_name()
     rock_version = check_rock.get_version()
-    LOCAL_rock_IMAGE = f"{rock_image}:{rock_version}"
+    LOCAL_ROCK_IMAGE = f"{rock_image}:{rock_version}"
 
     # assert we have the expected files
     subprocess.run(
@@ -45,7 +45,7 @@ def test_rock(rock_test_env):
             "run",
             "--entrypoint",
             "/bin/bash",
-            LOCAL_rock_IMAGE,
+            LOCAL_ROCK_IMAGE,
             "-c",
             "ls -la /filebrowser",
         ],
@@ -57,7 +57,7 @@ def test_rock(rock_test_env):
             "run",
             "--entrypoint",
             "/bin/bash",
-            LOCAL_rock_IMAGE,
+            LOCAL_ROCK_IMAGE,
             "-c",
             "ls -la /.filebrowser.json",
         ],
@@ -69,7 +69,7 @@ def test_rock(rock_test_env):
             "run",
             "--entrypoint",
             "/bin/bash",
-            LOCAL_rock_IMAGE,
+            LOCAL_ROCK_IMAGE,
             "-c",
             "ls -la /healthcheck.sh",
         ],
