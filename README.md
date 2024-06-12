@@ -1,3 +1,3 @@
 # filebrowser-rocks
 
-ROCKs for [filebrowser](https://github.com/filebrowser/filebrowser).
+rocks for [filebrowser](https://github.com/filebrowser/filebrowser).
