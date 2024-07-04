@@ -13,5 +13,5 @@ jobs:
     secrets: inherit
     with:
       microk8s-channel: 1.24/stable
-      juju-channel: 2.9/stable
+      juju-channel: 3.4/stable
       python-version: "3.8"
