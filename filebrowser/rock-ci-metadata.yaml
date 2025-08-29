@@ -1,0 +1,6 @@
+integrations:
+  - consumer-repository: https://github.com/canonical/kubeflow-volumes-operator.git
+
+    replace-image:
+      - file: config.yaml
+        path: options.volume-viewer-image.default
