@@ -8,7 +8,7 @@ on:
 jobs:
 
   scheduled-rebuild-rocks:
-    uses: canonical/charmed-kubeflow-workflows/.github/workflows/get-all-rock-refs-and-build-scan-test-publish.yaml@main
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/get-all-rock-refs-and-build-scan-test-publish.yaml@kf-8924
     permissions:
       contents: read
       issues: write
