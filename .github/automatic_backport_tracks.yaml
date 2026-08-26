@@ -1,4 +1,2 @@
 automatic_backport_tracks:
   - track/2.27
-integration_branch_map:
-  track/2.27: track/1.10
